@@ -1,12 +1,22 @@
 package onelemonyboi.lemonlib.rewards;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+
+import java.io.InputStreamReader;
+import java.net.URL;
+
+import static onelemonyboi.lemonlib.rewards.PatreonJSON.REWARD_MAP;
 
 public class PatreonRewards {
     /**
@@ -42,8 +52,8 @@ public class PatreonRewards {
      DARK_PURPLE
      */
 
-    public static void PatreonRewardsHandling(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER) {
+    public static void PatreonRewardsHandling(PlayerEvent.NameFormat event) {
+        if (!event.getEntity().level().isClientSide) {
             return;
         }
 
@@ -56,9 +66,27 @@ public class PatreonRewards {
         TextColor[] queerArray = {color("B77EDD"), color("FFFFFF"), color("48821D")};
         TextColor[] nonBinaryArray = {color("FFF530"), color("FFFFFF"), color("9E58D2"), color("282828")};
 
-        String name = event.player.getGameProfile().getName();
-        MutableComponent iFormattableTextComponent = new TextComponent(name);
-        String type = PatreonJSON.REWARD_MAP.getOrDefault(name, "No Value");
+        String name = event.getEntity().getGameProfile().getName();
+        MutableComponent iFormattableTextComponent = Component.literal(name);
+
+        if (REWARD_MAP.isEmpty()) {
+            Minecraft.getInstance().executeBlocking(() -> {
+                Gson jsonParser = new Gson();
+                try {
+                    URL url = new URL("https://raw.githubusercontent.com/OneLemonyBoi/LemonLib/main/supporters.json");
+                    try (JsonReader reader = new JsonReader(new InputStreamReader(url.openStream()))) {
+                        PatreonJSON.Supporter[] supportersList = jsonParser.fromJson(reader, PatreonJSON.Supporter[].class);
+                        for (PatreonJSON.Supporter supporter : supportersList) {
+                            REWARD_MAP.put(supporter.name, supporter.color);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        String type = REWARD_MAP.getOrDefault(name, "No Value");
         if (!type.equals("No Value")) {
             switch (type) {
                 case "Rainbow":
@@ -91,16 +119,16 @@ public class PatreonRewards {
             }
             java.util.Collection<MutableComponent> suffixes = new java.util.LinkedList<>();
             iFormattableTextComponent = suffixes.stream().reduce(iFormattableTextComponent, MutableComponent::append);
-            event.player.setCustomName(iFormattableTextComponent);
-            ObfuscationReflectionHelper.setPrivateValue(Player.class, event.player, iFormattableTextComponent, "displayname");
+            event.getEntity().setCustomName(iFormattableTextComponent);
+            event.setDisplayname(iFormattableTextComponent);
         }
     }
 
     public static MutableComponent formattingSetter(String name, TextColor[] colors) {
-        MutableComponent iFormattableTextComponent = new TextComponent("");
+        MutableComponent iFormattableTextComponent = Component.literal("");
         int count = 0;
         for (Character c : name.toCharArray()) {
-            MutableComponent tempFTC = new TextComponent(c.toString()).setStyle(iFormattableTextComponent.getStyle().withColor(colors[count]));
+            MutableComponent tempFTC = Component.literal(c.toString()).setStyle(iFormattableTextComponent.getStyle().withColor(colors[count]));
             iFormattableTextComponent.append(tempFTC);
             count = count == colors.length - 1 ? 0 : count + 1;
         }

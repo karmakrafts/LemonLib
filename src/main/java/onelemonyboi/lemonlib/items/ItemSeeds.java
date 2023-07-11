@@ -7,8 +7,8 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item.Properties;
 
 public class ItemSeeds extends ItemNameBlockItem {
-    public ItemSeeds(Block crop, CreativeModeTab group)
+    public ItemSeeds(Block crop)
     {
-        super(crop, new Properties().stacksTo(64).tab(group));
+        super(crop, new Properties().stacksTo(64));
     }
 }

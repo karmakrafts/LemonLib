@@ -12,7 +12,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-@OnlyIn(Dist.CLIENT)
 public class PatreonJSON {
     protected static Map<String, String> REWARD_MAP = new HashMap<>();
 
@@ -37,7 +36,7 @@ public class PatreonJSON {
         });
     }
 
-    private static class Supporter {
+    public static class Supporter {
         public String name;
         public String color;
     }

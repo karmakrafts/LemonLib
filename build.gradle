@@ -3,10 +3,12 @@ buildscript {
         maven { url = 'https://files.minecraftforge.net/maven' }
         mavenCentral()
         maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        maven { url = 'https://maven.parchmentmc.org' } // Add this line
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath 'org.parchmentmc:librarian:1.+'
     }
 }
 
@@ -15,6 +17,7 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 version = "${mod_version}"
 group = "onelemonyboi.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -28,7 +31,7 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: "official", version: "1.18.2"
+    mappings channel: "parchment", version: "2023.07.09-1.20.1"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -139,7 +142,7 @@ jar.finalizedBy('reobfJar')
 publishing {
     repositories {
         maven {
-            url "https://maven.explodingcreeper.me/releases"
+            url "https://maven.fdnetworks.org/releases"
             credentials {
                 username System.getenv("MAVEN_USER")
                 password System.getenv("MAVEN_PASSWORD")
