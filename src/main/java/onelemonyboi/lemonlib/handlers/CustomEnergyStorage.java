@@ -5,10 +5,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.EnergyStorage;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.EnergyStorage;
+import net.neoforged.neoforge.energy.IEnergyStorage;
+import org.jetbrains.annotations.Nullable;
 
 public class CustomEnergyStorage extends EnergyStorage {
     Boolean canReceive = true;
@@ -71,6 +71,14 @@ public class CustomEnergyStorage extends EnergyStorage {
         this.maxReceive = num;
     }
 
+    public Integer getMaxExtract() {
+        return this.maxExtract;
+    }
+
+    public Integer getMaxRecieve() {
+        return this.maxReceive;
+    }
+
     // REWORKING
 
     public int produceEnergy(int produce) {
@@ -100,25 +108,23 @@ public class CustomEnergyStorage extends EnergyStorage {
     public void outputToSide(Level world, BlockPos pos, Direction side, int max) {
         BlockEntity te = world.getBlockEntity(pos.relative(side));
         if(te == null) {return;}
-        LazyOptional<IEnergyStorage> opt = te.getCapability(ForgeCapabilities.ENERGY, side.getOpposite());
-        IEnergyStorage ies = opt.orElse(null);
-        if(ies == null) {return;}
+        IEnergyStorage opt = world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side.getOpposite());
+        if(opt == null) {return;}
 
         int ext = this.consumeEnergy(max);
-        int putBack = ext - ies.receiveEnergy(ext, false);
+        int putBack = ext - opt.receiveEnergy(ext, false);
         this.produceEnergy(putBack);
     }
 
     public void inputFromSide(Level world, BlockPos pos, Direction side, int max) {
         BlockEntity te = world.getBlockEntity(pos.relative(side));
         if(te == null) {return;}
-        LazyOptional<IEnergyStorage> opt = te.getCapability(ForgeCapabilities.ENERGY, side.getOpposite());
-        IEnergyStorage ies = opt.orElse(null);
-        if(ies == null) {return;}
+        IEnergyStorage opt = world.getCapability(Capabilities.EnergyStorage.BLOCK, pos, side.getOpposite());
+        if(opt == null) {return;}
 
-        int ext = ies.extractEnergy(max, false);
+        int ext = opt.extractEnergy(max, false);
         int putBack = ext - this.produceEnergy(ext);
-        ies.receiveEnergy(putBack, false);
+        opt.receiveEnergy(putBack, false);
     }
 
     @Deprecated

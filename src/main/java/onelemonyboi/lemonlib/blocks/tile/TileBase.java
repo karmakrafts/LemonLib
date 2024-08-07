@@ -3,6 +3,7 @@ package onelemonyboi.lemonlib.blocks.tile;
 import lombok.SneakyThrows;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerLevel;
@@ -12,9 +13,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
 import onelemonyboi.lemonlib.annotations.SaveInNBT;
 import onelemonyboi.lemonlib.trait.behaviour.Behaviour;
 import onelemonyboi.lemonlib.trait.behaviour.IHasBehaviour;
@@ -43,12 +41,12 @@ public class TileBase extends BlockEntity implements IHasBehaviour {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag nbt) {
+    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider pRegistries) {
         if (behaviour.has(TileTraits.PowerTrait.class)) {
-            behaviour.getRequired(TileTraits.PowerTrait.class).getEnergyStorage().write(nbt);
+            behaviour.getRequired(TileTraits.PowerTrait.class).getCustomEnergyStorage().write(nbt);
         }
         if (behaviour.has(TileTraits.ItemTrait.class)) {
-            nbt.put("itemSH", behaviour.getRequired(TileTraits.ItemTrait.class).getItemStackHandler().serializeNBT());
+            nbt.put("itemSH", behaviour.getRequired(TileTraits.ItemTrait.class).getItemStackHandler().serializeNBT(pRegistries));
         }
 
         for (Field f : this.getClass().getDeclaredFields()) {
@@ -69,17 +67,17 @@ public class TileBase extends BlockEntity implements IHasBehaviour {
             f.setAccessible(false);
         }
 
-        super.saveAdditional(nbt);
+        super.saveAdditional(nbt, pRegistries);
     }
 
     @SneakyThrows
     @Override
-    public void load(CompoundTag nbt) {
+    protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider pRegistries) {
         if (behaviour.has(TileTraits.PowerTrait.class)) {
-            behaviour.getRequired(TileTraits.PowerTrait.class).getEnergyStorage().read(nbt);
+            behaviour.getRequired(TileTraits.PowerTrait.class).getCustomEnergyStorage().read(nbt);
         }
         if (behaviour.has(TileTraits.ItemTrait.class)) {
-            behaviour.getRequired(TileTraits.ItemTrait.class).getItemStackHandler().deserializeNBT(nbt.getCompound("itemSH"));
+            behaviour.getRequired(TileTraits.ItemTrait.class).getItemStackHandler().deserializeNBT(pRegistries, nbt.getCompound("itemSH"));
         }
 
         for (Field f : this.getClass().getDeclaredFields()) {
@@ -94,28 +92,15 @@ public class TileBase extends BlockEntity implements IHasBehaviour {
             f.setAccessible(false);
         }
 
-        super.load(nbt);
-    }
-
-    @Nonnull
-    @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY && behaviour.has(TileTraits.PowerTrait.class))
-            return behaviour.getRequired(TileTraits.PowerTrait.class).getLazyEnergyStorage().cast();
-
-        if (cap == ForgeCapabilities.ITEM_HANDLER && behaviour.has(TileTraits.ItemTrait.class)) {
-            return behaviour.getRequired(TileTraits.ItemTrait.class).getLazyItemStackHandler().cast();
-        }
-        return super.getCapability(cap, side);
+        super.loadAdditional(nbt, pRegistries);
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (behaviour.has(TileTraits.PowerTrait.class))
-            behaviour.getRequired(TileTraits.PowerTrait.class).getLazyEnergyStorage().invalidate();
-        if (behaviour.has(TileTraits.ItemTrait.class))
-            behaviour.getRequired(TileTraits.ItemTrait.class).getLazyItemStackHandler().invalidate();
+        if (behaviour.has(TileTraits.PowerTrait.class) || behaviour.has(TileTraits.ItemTrait.class)) {
+            level.invalidateCapabilities(this.getBlockPos());
+        }
     }
 
     @Nullable
@@ -124,20 +109,21 @@ public class TileBase extends BlockEntity implements IHasBehaviour {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
+
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        this.load(pkt.getTag());
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
+        this.loadAdditional(pkt.getTag(), lookupProvider);
     }
 
     @Override
-    public void handleUpdateTag(CompoundTag tag) {
-        this.load(tag);
+    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider lookupProvider) {
+        this.loadAdditional(tag, lookupProvider);
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
+    public CompoundTag getUpdateTag(HolderLookup.Provider pRegistries) {
         CompoundTag nbt = new CompoundTag();
-        this.saveAdditional(nbt);
+        this.saveAdditional(nbt, level.registryAccess());
         return nbt;
     }
 

@@ -1,11 +1,12 @@
 package onelemonyboi.lemonlib.handlers;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.common.util.INBTSerializable;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 
@@ -17,13 +18,13 @@ public class MUItemStackHandler implements IItemHandler, IItemHandlerModifiable,
     }
 
     @Override
-    public CompoundTag serializeNBT() {
-        return internal.serializeNBT();
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+        return internal.serializeNBT(provider);
     }
 
     @Override
-    public void deserializeNBT(CompoundTag nbt) {
-        internal.deserializeNBT(nbt);
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag nbt) {
+        internal.deserializeNBT(provider, nbt);
     }
 
     @Override

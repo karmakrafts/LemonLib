@@ -6,12 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -136,6 +131,6 @@ public class PatreonRewards {
     }
 
     public static TextColor color(String string) {
-        return TextColor.parseColor("#".concat(string));
+        return TextColor.parseColor("#".concat(string)).getOrThrow();
     }
 }

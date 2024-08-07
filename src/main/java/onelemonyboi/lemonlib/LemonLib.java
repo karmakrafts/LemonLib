@@ -1,27 +1,27 @@
 package onelemonyboi.lemonlib;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import onelemonyboi.lemonlib.rewards.PatreonRewards;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
+import static net.neoforged.neoforge.common.NeoForge.EVENT_BUS;
 
 @Mod(LemonLib.MOD_ID)
 public class LemonLib {
     public static final String MOD_ID = "lemonlib";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public LemonLib()
+    public LemonLib(IEventBus bus)
     {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        bus.addListener(this::setup);
+        bus.addListener(this::doClientStuff);
+        bus.addListener(this::enqueueIMC);
+        bus.addListener(this::setup);
         EVENT_BUS.addListener(PatreonRewards::PatreonRewardsHandling);
     }
 
